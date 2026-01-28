@@ -8,6 +8,6 @@ import java.time.LocalDateTime;
 public class TestController {
     @GetMapping("/")
     public String home() {
-        return "CI/CD 배포 성공!";
+        return "CI/CD 배포 성공! 현재 시간: " + LocalDateTime.now();
     }
 }
