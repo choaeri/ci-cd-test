@@ -25,8 +25,12 @@ pipeline {
 
         stage('Docker Deploy') {
             steps {
+				sh 'docker stop ci-cd-app || true'
+        		sh 'docker rm ci-cd-app || true'
+        		
                 sh 'docker build -t ci-cd-test:latest .'
-                sh 'docker run -d --name ci-cd-app -p 8081:8080 ci-cd-test:latest'
+                
+                sh 'docker run -d --name ci-cd-app --network my-network -p 8081:8080 ci-cd-test:latest'
             }
         }
     }
