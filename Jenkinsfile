@@ -8,7 +8,10 @@ pipeline {
     stages {
         stage('Prepare') {
             steps {
-                echo 'Checking out code...'
+				sh 'docker stop ci-cd-app || true'
+                sh 'docker rm ci-cd-app || true'
+                // 네트워크 생성 (DB와 연결용)
+                sh 'docker network create my-network || true'
             }
         }
 
@@ -20,14 +23,9 @@ pipeline {
             }
         }
 
-        stage('Docker Build & Run') {
+        stage('Docker Deploy') {
             steps {
-                echo 'Building Docker Image...'
                 sh 'docker build -t ci-cd-test:latest .'
-                
-                echo 'Running Container...'
-                sh 'docker stop ci-cd-app || true'
-                sh 'docker rm ci-cd-app || true'
                 sh 'docker run -d --name ci-cd-app -p 8081:8080 ci-cd-test:latest'
             }
         }
