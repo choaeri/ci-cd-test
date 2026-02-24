@@ -23,12 +23,12 @@ pipeline {
         stage('Docker Build & Run') {
             steps {
                 echo 'Building Docker Image...'
-                sh 'docker build -t my-app:latest .'
+                sh 'docker build -t ci-cd-test:latest .'
                 
                 echo 'Running Container...'
-                sh 'docker stop my-app || true'
-                sh 'docker rm my-app || true'
-                sh 'docker run -d --name my-app -p 8081:8080 my-app:latest'
+                sh 'docker stop jenkins || true'
+                sh 'docker rm jenkins || true'
+                sh 'docker run -d --name jenkins -p 8081:8080 ci-cd-test:latest'
             }
         }
     }
