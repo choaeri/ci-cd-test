@@ -26,9 +26,9 @@ pipeline {
                 sh 'docker build -t ci-cd-test:latest .'
                 
                 echo 'Running Container...'
-                sh 'docker stop jenkins || true'
-                sh 'docker rm jenkins || true'
-                sh 'docker run -d --name jenkins -p 8081:8080 ci-cd-test:latest'
+                sh 'docker stop ci-cd-app || true'
+                sh 'docker rm ci-cd-app || true'
+                sh 'docker run -d --name ci-cd-app -p 8081:8080 ci-cd-test:latest'
             }
         }
     }
