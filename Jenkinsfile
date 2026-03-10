@@ -8,7 +8,7 @@ pipeline {
     environment {
         DOCKER_HUB_USER = 'aericho'
         DOCKER_ID = 'aericho'
-        DOCKER_HOST = 'tcp://127.0.0.1:2375'
+        DOCKER_HOST = 'tcp://192.168.50.1:2375'
     }
 
     stages {
@@ -27,9 +27,9 @@ pipeline {
 
                         // 플러그인 문법 대신 sh 명령어로 직접 처리
                         withCredentials([usernamePassword(credentialsId: "${DOCKER_ID}", usernameVariable: 'D_USER', passwordVariable: 'D_PASS')]) {
-                          sh "echo \$D_PASS | docker -H ${DOCKER_HOST} login -u \$D_USER --password-stdin"
-                          sh "docker -H ${DOCKER_HOST} build -t ${DOCKER_HUB_USER}/ci-cd-test-back:latest ."
-                          sh "docker -H ${DOCKER_HOST} push ${DOCKER_HUB_USER}/ci-cd-test-back:latest"
+                          sh "echo \$D_PASS | docker login -u \$D_USER --password-stdin"
+                          sh "docker build -t ${DOCKER_HUB_USER}/ci-cd-test-back:latest ."
+                          sh "docker push ${DOCKER_HUB_USER}/ci-cd-test-back:latest"
                       }
                     }
                 }
@@ -52,14 +52,19 @@ pipeline {
         stage('Local Test Run') {
             steps {
                 script {
-                    // 기존 컨테이너가 없어도 에러나지 않게 || true 추가
+                    // 1. 네트워크 생성 (이미 있으면 무시)
+                    sh "docker network create my-network || true"
+
+                    // 2. 백엔드 컨테이너 실행
                     sh "docker stop back-container || true"
                     sh "docker rm back-container || true"
-                    sh "docker run -d --name back-container -p 8080:8080 ${DOCKER_HUB_USER}/ci-cd-test-back:latest"
+                    // 말씀하신 대로 직관적인 docker run 명령어 사용
+                    sh "docker run -d --name back-container --network my-network -p 8081:8080 ${DOCKER_HUB_USER}/ci-cd-test-back:latest"
 
+                    // 3. 프론트엔드 컨테이너 실행
                     sh "docker stop front-container || true"
                     sh "docker rm front-container || true"
-                    sh "docker run -d --name front-container -p 80:80 ${DOCKER_HUB_USER}/ci-cd-test-front:latest"
+                    sh "docker run -d --name front-container --network my-network -p 80:80 ${DOCKER_HUB_USER}/ci-cd-test-front:latest"
                 }
             }
         }
