@@ -20,7 +20,7 @@ pipeline {
                         sh "./gradlew clean build -x test" // clean 추가 추천
 
                         withCredentials([usernamePassword(credentialsId: "${DOCKER_CRED_ID}", usernameVariable: 'D_USER', passwordVariable: 'D_PASS')]) {
-                            sh "echo \$D_PASS | docker login -u \$D_USER --password-stdin"
+                            sh "docker login -u \$D_USER -p \$D_PASS"
                             sh "docker build -t ${DOCKER_HUB_USER}/ci-cd-test-back:latest ."
                             sh "docker push ${DOCKER_HUB_USER}/ci-cd-test-back:latest"
                         }
@@ -33,9 +33,11 @@ pipeline {
             steps {
                 dir('ci-cd-test-front') {
                     script {
-                        // 프론트엔드도 로그인이 필요하다면 push 전에 로그인 체크
-                        sh "docker build -t ${DOCKER_HUB_USER}/ci-cd-test-front:latest ."
-                        sh "docker push ${DOCKER_HUB_USER}/ci-cd-test-front:latest"
+                        withCredentials([usernamePassword(credentialsId: "${DOCKER_ID}", usernameVariable: 'D_USER', passwordVariable: 'D_PASS')]) {
+                            sh "docker login -u \$D_USER -p \$D_PASS"
+                            sh "docker build -t ${DOCKER_HUB_USER}/ci-cd-test-front:latest ."
+                            sh "docker push ${DOCKER_HUB_USER}/ci-cd-test-front:latest"
+                        }
                     }
                 }
             }
@@ -44,15 +46,16 @@ pipeline {
         stage('Local Deployment') {
             steps {
                 script {
-                    // 기존 컨테이너 정리 시 에러 무시
                     sh "docker network create my-network || true"
-                    
-                    // 백엔드 재시작
-                    sh "docker rm -f back-container || true"
+
+                    // 백엔드 실행
+                    sh "docker stop back-container || true"
+                    sh "docker rm back-container || true"
                     sh "docker run -d --name back-container --network my-network -p 8081:8080 ${DOCKER_HUB_USER}/ci-cd-test-back:latest"
 
-                    // 프론트엔드 재시작
-                    sh "docker rm -f front-container || true"
+                    // 프론트엔드 실행
+                    sh "docker stop front-container || true"
+                    sh "docker rm front-container || true"
                     sh "docker run -d --name front-container --network my-network -p 80:80 ${DOCKER_HUB_USER}/ci-cd-test-front:latest"
                 }
             }
