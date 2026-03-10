@@ -21,7 +21,6 @@ pipeline {
                         sh "./gradlew clean build -x test"
 
                         withCredentials([usernamePassword(credentialsId: "${DOCKER_CRED_ID}", usernameVariable: 'D_USER', passwordVariable: 'D_PASS')]) {
-
                             sh """
                             echo \$D_PASS | docker login -u \$D_USER --password-stdin
                             docker build -t ${DOCKER_HUB_USER}/ci-cd-test-back:latest .
@@ -39,7 +38,6 @@ pipeline {
                     script {
 
                         withCredentials([usernamePassword(credentialsId: "${DOCKER_CRED_ID}", usernameVariable: 'D_USER', passwordVariable: 'D_PASS')]) {
-
                             sh """
                             echo \$D_PASS | docker login -u \$D_USER --password-stdin
                             docker build -t ${DOCKER_HUB_USER}/ci-cd-test-front:latest .
