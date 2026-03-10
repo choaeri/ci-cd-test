@@ -3,8 +3,7 @@ pipeline {
 
     tools {
         jdk 'jdk11'
-        // 추가: 위에서 설정한 Name과 동일하게 입력
-        docker 'docker' 
+        dockerTool 'docker' 
     }
 
     environment {
