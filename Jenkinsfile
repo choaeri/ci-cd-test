@@ -18,7 +18,6 @@ pipeline {
             steps {
                 dir('ci-cd-test-back') {
                     script {
-                        // Gradle 빌드 (테스트 제외)
                         sh "chmod +x gradlew"
                         sh "./gradlew build -x test"
 
@@ -37,7 +36,6 @@ pipeline {
             steps {
                 dir('ci-cd-test-front') {
                     script {
-                        // 프론트엔드는 Dockerfile 내에서 빌드(Multi-stage)하므로 바로 빌드 진행
                         docker.withRegistry('https://index.docker.io/v1/', 'aericho') {
                             def frontImage = docker.build("${DOCKER_HUB_USER}/ci-cd-test-front:latest", ".")
                             frontImage.push()
