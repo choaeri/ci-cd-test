@@ -3,6 +3,8 @@ pipeline {
 
     tools {
         jdk 'jdk11'
+        // 추가: 위에서 설정한 Name과 동일하게 입력
+        docker 'docker' 
     }
 
     environment {
@@ -19,7 +21,7 @@ pipeline {
                         sh "./gradlew build -x test"
 
                         withCredentials([usernamePassword(credentialsId: "${DOCKER_ID}", usernameVariable: 'D_USER', passwordVariable: 'D_PASS')]) {
-                            // 기본 포트(소켓)를 사용하므로 옵션이 필요 없습니다!
+                            // 이제 docker 명령어가 인식됩니다!
                             sh "echo \$D_PASS | docker login -u \$D_USER --password-stdin"
                             sh "docker build -t ${DOCKER_HUB_USER}/ci-cd-test-back:latest ."
                             sh "docker push ${DOCKER_HUB_USER}/ci-cd-test-back:latest"
