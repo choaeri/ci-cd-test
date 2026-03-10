@@ -53,7 +53,7 @@ pipeline {
             steps {
                 script {
                     // 기존 컨테이너 정리 후 새 이미지로 실행
-                    // 백엔드 실행
+                    // 백엔드 실행 
                     sh "docker ps -q --filter name=back-container | xargs -r docker stop"
                     sh "docker ps -a -q --filter name=back-container | xargs -r docker rm"
                     sh "docker run -d --name back-container -p 8080:8080 ${DOCKER_HUB_USER}/ci-cd-test-back:latest"
