@@ -6,7 +6,7 @@ pipeline {
     }
 
     environment {
-        DOCKER_HUB_USER = 'aericho' 
+        DOCKER_HUB_USER = 'aericho'
     }
 
     stages {
