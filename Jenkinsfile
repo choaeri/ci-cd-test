@@ -8,16 +8,9 @@ pipeline {
     environment {
         DOCKER_HUB_USER = 'aericho'
         DOCKER_ID = 'aericho'
-        DOCKER_HOST = 'tcp://host.docker.internal:2375'
     }
 
     stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-
         stage('Backend: Build & Push') {
             steps {
                 dir('ci-cd-test-back') {
@@ -25,12 +18,12 @@ pipeline {
                         sh "chmod +x gradlew"
                         sh "./gradlew build -x test"
 
-                        // 플러그인 문법 대신 sh 명령어로 직접 처리
-                      withCredentials([usernamePassword(credentialsId: "${DOCKER_ID}", usernameVariable: 'D_USER', passwordVariable: 'D_PASS')]) {
-                        sh "echo \$D_PASS | docker -H ${DOCKER_HOST} login -u \$D_USER --password-stdin"
-                        sh "docker -H ${DOCKER_HOST} build -t ${DOCKER_HUB_USER}/ci-cd-test-back:latest ."
-                        sh "docker -H ${DOCKER_HOST} push ${DOCKER_HUB_USER}/ci-cd-test-back:latest"
-                      }
+                        withCredentials([usernamePassword(credentialsId: "${DOCKER_ID}", usernameVariable: 'D_USER', passwordVariable: 'D_PASS')]) {
+                            // 기본 포트(소켓)를 사용하므로 옵션이 필요 없습니다!
+                            sh "echo \$D_PASS | docker login -u \$D_USER --password-stdin"
+                            sh "docker build -t ${DOCKER_HUB_USER}/ci-cd-test-back:latest ."
+                            sh "docker push ${DOCKER_HUB_USER}/ci-cd-test-back:latest"
+                        }
                     }
                 }
             }
