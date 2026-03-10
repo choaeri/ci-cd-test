@@ -7,7 +7,8 @@ pipeline {
 
     environment {
         DOCKER_HUB_USER = 'aericho'
-        DOCKER_ID = 'aericho' // Credentials ID
+        DOCKER_ID = 'aericho'
+        DOCKER_HOST = 'tcp://host.docker.internal:2375'
     }
 
     stages {
