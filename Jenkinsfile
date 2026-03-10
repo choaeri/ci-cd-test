@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    tools {
+        jdk 'jdk11'
+    }
+
     environment {
         DOCKER_HUB_USER = 'aericho' 
     }
