@@ -3,7 +3,6 @@ pipeline {
 
     environment {
         DOCKER_HUB_USER = 'aericho' 
-        DOCKER_CREDS = credentials('aericho')
     }
 
     stages {
@@ -22,7 +21,7 @@ pipeline {
                         sh "./gradlew build -x test"
 
                         // Docker Hub 로그인 및 푸시
-                        docker.withRegistry('https://index.docker.io/v1/', 'aericho') {
+                        docker.withRegistry('https://index.docker.io/v1/', 'choaeri') {
                             def backImage = docker.build("${DOCKER_HUB_USER}/ci-cd-test-back:latest", ".")
                             backImage.push()
                         }
@@ -36,7 +35,7 @@ pipeline {
             steps {
                 dir('ci-cd-test-front') {
                     script {
-                        docker.withRegistry('https://index.docker.io/v1/', 'aericho') {
+                        docker.withRegistry('https://index.docker.io/v1/', 'choaeri') {
                             def frontImage = docker.build("${DOCKER_HUB_USER}/ci-cd-test-front:latest", ".")
                             frontImage.push()
                         }
