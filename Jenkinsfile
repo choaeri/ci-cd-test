@@ -7,6 +7,7 @@ pipeline {
 
     environment {
         DOCKER_HUB_USER = 'aericho'
+        DOCKER_ID = 'aericho' // Credentials ID
     }
 
     stages {
@@ -16,7 +17,6 @@ pipeline {
             }
         }
 
-        // 1. 백엔드 빌드 및 배포 (Java 11 + Gradle)
         stage('Backend: Build & Push') {
             steps {
                 dir('ci-cd-test-back') {
@@ -24,43 +24,40 @@ pipeline {
                         sh "chmod +x gradlew"
                         sh "./gradlew build -x test"
 
-                        // Docker Hub 로그인 및 푸시
-                        docker.withRegistry('', 'aericho') {
-                            def backImage = docker.build("${DOCKER_HUB_USER}/ci-cd-test-back:latest", ".")
-                            backImage.push()
+                        // 플러그인 문법 대신 sh 명령어로 직접 처리
+                        withCredentials([usernamePassword(credentialsId: "${DOCKER_ID}", usernameVariable: 'D_USER', passwordVariable: 'D_PASS')]) {
+                            sh "echo \$D_PASS | docker login -u \$D_USER --password-stdin"
+                            sh "docker build -t ${DOCKER_HUB_USER}/ci-cd-test-back:latest ."
+                            sh "docker push ${DOCKER_HUB_USER}/ci-cd-test-back:latest"
                         }
                     }
                 }
             }
         }
 
-        // 2. 프론트엔드 빌드 및 배포 (Vite + Docker)
         stage('Frontend: Build & Push') {
             steps {
                 dir('ci-cd-test-front') {
                     script {
-                        docker.withRegistry('', 'aericho') {
-                            def frontImage = docker.build("${DOCKER_HUB_USER}/ci-cd-test-front:latest", ".")
-                            frontImage.push()
+                        withCredentials([usernamePassword(credentialsId: "${DOCKER_ID}", usernameVariable: 'D_USER', passwordVariable: 'D_PASS')]) {
+                            sh "docker build -t ${DOCKER_HUB_USER}/ci-cd-test-front:latest ."
+                            sh "docker push ${DOCKER_HUB_USER}/ci-cd-test-front:latest"
                         }
                     }
                 }
             }
         }
 
-        // 3. 로컬 테스트 서버에서 컨테이너 실행
         stage('Local Test Run') {
             steps {
                 script {
-                    // 기존 컨테이너 정리 후 새 이미지로 실행
-                    // 백엔드 실행 
-                    sh "docker ps -q --filter name=back-container | xargs -r docker stop"
-                    sh "docker ps -a -q --filter name=back-container | xargs -r docker rm"
+                    // 기존 컨테이너가 없어도 에러나지 않게 || true 추가
+                    sh "docker stop back-container || true"
+                    sh "docker rm back-container || true"
                     sh "docker run -d --name back-container -p 8080:8080 ${DOCKER_HUB_USER}/ci-cd-test-back:latest"
 
-                    // 프론트엔드 실행
-                    sh "docker ps -q --filter name=front-container | xargs -r docker stop"
-                    sh "docker ps -a -q --filter name=front-container | xargs -r docker rm"
+                    sh "docker stop front-container || true"
+                    sh "docker rm front-container || true"
                     sh "docker run -d --name front-container -p 80:80 ${DOCKER_HUB_USER}/ci-cd-test-front:latest"
                 }
             }
